@@ -3,23 +3,28 @@ require 'csv'
 class Gauss
 
   def initialize(matrix)
-    @matrix = ensure_ints matrix
+    @matrix = ensure_floats matrix
   end
 
   def process
-    puts "execute gauss reduction"
-    print_state
+    last_row_index = matrix.size - 1
 
-    puts "interchange rows 1 and 3"
-    swap_rows 0, 2
-    print_state
+    (0..last_row_index).each do |row_index|
+      value = 1.0 / (matrix[row_index][row_index])
+      next if value == 0
+      multiply_row row_index, value
 
-    puts "multiply row 2 by 5"
-    multiply_row 1, 5
-    print_state
+      # turn 0 the below rows
+      next_row = row_index + 1
+      if next_row <= last_row_index
+        (next_row..last_row_index).each do |below_row_index|
+          value = - matrix[below_row_index][row_index]
+          next if value == 0
+          sum_and_multiply below_row_index, row_index, value
+        end
+      end
+    end
 
-    puts "to row 0 sum row 1 by 2"
-    sum_and_multiply 0, 1, 2
     print_state
   end
 
@@ -28,8 +33,8 @@ class Gauss
       @matrix || []
     end
 
-    def ensure_ints(new_matrix)
-      new_matrix.map{ |array| array.map(&:to_i) }
+    def ensure_floats(new_matrix)
+      new_matrix.map{ |array| array.map(&:to_f) }
     end
 
     def swap_rows(row_index_1, row_index_2)
